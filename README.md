@@ -21,6 +21,8 @@ A lot of the functionality for TicTacToe is already provided. To begin with chec
 
 Run the code, explore the interface and play the game. You can do this in groups if you like. It is important to try to build a community amongst students on the module!
 
+You will be building on this code to complete the application and create AI players to play against.
+
 ## 2. Look at the data
 
 An important part of programming is understanding what information is important and how it is stored. In the code there is a region called data. The first part of this code includes a section of constants. They are appropriately named, and so are hopefully self explanatory. Mostly they set limits for other variables.
@@ -90,7 +92,7 @@ static Player players[] = {
     { 5, ImVec4(1.0, 0.0, 1.0, 1.0) }, };
 ```
 
-There is also a log facility . This could be improved by creating a more object oriented solution.
+There is also a log facility to get (a limited amount of) feedback from the application - similar to how you would do in the console. This could be improved by creating a more object oriented solution.
 
 ```cpp
 
@@ -116,7 +118,6 @@ static void DisplayLog()
 }
 
 ```
-
 
 ## 3. Fix the win conditions
 
@@ -163,7 +164,7 @@ The nested loop iterates over every possible element in the 2 dimensional board 
     }
 ```
 
-For each of these elements first a check is performed to see it the element is 0. If it is then no player has played in this spot and so this is not a winning row. Next it is first assumed that the element at [rowIndex][colIndex] win will be found, then the elements to the right are checked to see if they are the same.
+For each of these elements first a check is performed to see it the element is 0. If it is then no player has played in this spot and so this is not part of a winning row. Next it is first assumed that the element at [rowIndex][colIndex] win will be found, then the elements to the right are checked to see if they are the same.
 
 ```cpp
 
@@ -173,6 +174,8 @@ For each of these elements first a check is performed to see it the element is 0
         }
 
 ```
+
+Next, we assume that the current element is the first element of a horizontal winning row by setting isWin to true - then we look at the elements to the right to see if this is the case. If we find that this is not a winning row we set isWin to false, and break out of the rest of the loop.
 
 ```cpp
         isWin = true;
@@ -192,10 +195,6 @@ If isWin is still true a win is found, and so the method returns the correspondi
     if (isWin) { return boardState[rowIndex][colIndex]; }
 ```
 
-Currently it does this by iterating over the 
-
-Test your code.
-
 ### Know your next commit!
 
 Remaining focused and making regular commits to source control is a habit that is difficult to build. In order to try and cultivate that we will promote an approach of knowing what your next commit will be. In this case, it will be to add a vertical win condition. To do this, in the CheckForWin method, after we check for horizontal wins, but before we return 0 add a loop that will loop through all of the columns.
@@ -207,7 +206,7 @@ Remaining focused and making regular commits to source control is a habit that i
     }
 ```
 
-Inside that loop add a second loop, that will 
+Inside that loop add a second loop, that will iterate over any row that can be the top most element of a vertical win.
 
 ```cpp
 
@@ -218,24 +217,16 @@ Inside that loop add a second loop, that will
 
 ```
 
+Check to see if the element is 0. If it is then no player has played in this spot and so this is not part of a winning row.
+
 ```cpp
     if (boardState[rowIndex][colIndex] == 0)
     {
         continue;
     }
-
-    isWin = true;
-    for (int winConIndex = 0; winConIndex < winCondition - 1; winConIndex++)
-    {
-        if (boardState[rowIndex + winConIndex][colIndex] != boardState[rowIndex + winConIndex + 1][colIndex])
-        {
-            isWin = false;
-            break;
-        }
-    }
-
-    if (isWin) { return boardState[rowIndex][colIndex]; }
 ```
+
+Next, assume that the current element is the top most element of a vertical winning column by setting isWin to true - then we look at the elements below to see if this is the case. If we find that this is not a winning column we set isWin to false, and break out of the rest of the loop.
 
 ```cpp
     isWin = true;
@@ -247,7 +238,9 @@ Inside that loop add a second loop, that will
             break;
         }
     }
-
+```
+If isWin is still true a win is found, and so the method returns the corresponding boardState element which is the ID of the player who has won.
+```cpp
     if (isWin) { return boardState[rowIndex][colIndex]; }
 ```
 
@@ -259,25 +252,33 @@ Test your code is working as expected, then commit your code with an appropriate
 
 The next piece of functionality we need to add is the diagonal win condition going from the top left to the bottom right.
 
-Modify the logic you have already 
-
-### Commit your code to source control with an appropriate message like "Added diagonal \ win condition"
-
-### Know your next commit!
-
-The final 
-
-### Commit your code to source control with an appropriate message like "Added diagonal / win condition"
-
-### Know your next commit!
-
-Add a drawing condition. You can do this by checking to see if there are any unoccupied spaces remaining.
+Replicate the previous steps, however you will have to think carefully about which "starting element" cells to check, and which other elements you need to check to determine a win.
 
 ### Test and commit your code to source control
 
+Test your code is working as expected, then commit your code with an appropriate commit message like "Added diagonal \ win condition"
+
+### Know your next commit!
+
+The next piece of functionality we need to add is the diagonal win condition going from the top right to the bottom left.
+
+### Test and commit your code to source control
+
+Test your code is working as expected, then commit your code with an appropriate commit message like "Added diagonal / win condition"
+
+Again replicate the previous steps, however you will have to think carefully about which "starting element" cells to check, and which other elements you need to check to determine a win.
+
+### Know your next commit!
+
+Add a tied game condition. You can do this by checking to see if there are any unoccupied spaces remaining. If there is a draw add a message to the log using the AddLogEntry method.
+
+### Test and commit your code to source control
+
+Test your code is working as expected, then commit your code with an appropriate commit message like "Added code to detect a tied game"
+
 ## 4. Add AI players
 
-The data has been set up to enable a player to be controlled by a human or an AI. The next task is to toggle between the two.
+The data has been set up to enable a player to be controlled by a human or an AI. The next task is to toggle between the two. The purpose of this part of the lab is to give you some experience of ImGui.
 
 ### Know your next commit!
 
@@ -310,7 +311,9 @@ The data has been set up to enable a player to be controlled by a human or an AI
 
 In the renderImGui method
 
-### Commit your code to source control with an appropriate message like ""
+### Test and commit your code to source control
+
+Test your code is working as expected, then commit your code with an appropriate commit message like "Added ability to toggle AI players to GUI"
 
 ## 5. Write a basic AI player
 
