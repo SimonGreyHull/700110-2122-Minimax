@@ -1,4 +1,4 @@
-# 7001100-Minimax
+# 700110-2122-Minimax
 
 ## Introduction
 
@@ -120,11 +120,101 @@ static void DisplayLog()
 
 ## 3. Fix the win condition
 
-## 4. Write a random AI player
+When playing the game you might have noticed that sometimes a player does not win when they should.
 
-## 5. Write a minimax AI player
+The CheckForWin() method checks the entire board to try to find a winning player - but at the momemnt it only checks for horizontal wins. The code that does this is below.
 
-## 6. Add more AI players
+```cpp
+    // horizontal win --
+    bool isWin;
+    for (int rowIndex = 0; rowIndex < MAX_ROWS; rowIndex++)
+    {
+        for (int colIndex = 0; colIndex <= MAX_COLUMNS - winCondition; colIndex++)
+        {
+            if (boardState[rowIndex][colIndex] == 0)
+            {
+                continue;
+            }
+
+            isWin = true;
+            for (int winConIndex = 0; winConIndex < winCondition - 1; winConIndex++)
+            {
+                if(boardState[rowIndex][colIndex + winConIndex] != boardState[rowIndex][colIndex + winConIndex + 1])
+                {
+                    isWin = false;
+                    break;
+                }
+            }
+
+            if (isWin) { return boardState[rowIndex][colIndex];; }
+        }
+    }
+```
+
+The nested loop iterates over every possible element in the 2 dimensional board state that could be the left most element on a winning row, so for example in a 3x3 board when three in a row is required to win only the elements on the left most column are checked.
+
+```cpp
+    for (int rowIndex = 0; rowIndex < MAX_ROWS; rowIndex++)
+    {
+        for (int colIndex = 0; colIndex <= MAX_COLUMNS - winCondition; colIndex++)
+        {
+            // other code
+        }
+    }
+```
+
+For each of these elements first a check is performed to see it the element is 0. If it is then no player has played in this spot and so this is not a winning row. Next it is first assumed that the element at [rowIndex][colIndex] win will be found, then the elements to the right are checked to see if they are the same.
+
+```cpp
+
+        if (boardState[rowIndex][colIndex] == 0)
+        {
+            continue;
+        }
+
+```
+
+```cpp
+        isWin = true;
+        for (int winConIndex = 0; winConIndex < winCondition - 1; winConIndex++)
+        {
+            if(boardState[rowIndex][colIndex + winConIndex] != boardState[rowIndex][colIndex + winConIndex + 1])
+            {
+                isWin = false;
+                break;
+            }
+        }
+```
+
+If isWin is still true a win is found, and so the method returns the corresponding boardState element which is the ID of the player who has won.
+
+```cpp
+    if (isWin) { return boardState[rowIndex][colIndex]; }
+```
+
+Currently it does this by iterating over the 
+
+## 4. Add UI for more players
+
+
+
+## 5. Write a basic AI player
+
+## 6. Write a minimax AI player
+
+A minimax
+
+Initially, you 
+
+you will need to add
+
+https://www.youtube.com/watch?v=trKjYdBASyQ
+
+Unfortunately, writing the code for your AI player was probably more fun than writing
+
+## 7. Add more AI players
+
+In our game you can add more players. Adapt your
 
 ```cpp
             std::string label = "";
