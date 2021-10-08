@@ -278,12 +278,36 @@ Test your code is working as expected, then commit your code with an appropriate
 
 ## 4. Add AI players
 
-The data has been set up to enable a player to be controlled by a human or an AI. The next task is to toggle between the two. The purpose of this part of the lab is to give you some experience of ImGui.
+The data has been set up to enable a player to be controlled by a human or an AI. The next task is to toggle between the two. The purpose of this part of the lab is to give you some experience of ImGui. 
 
 ### Know your next commit!
 
+The next step is to add GUI elements to toggle players between human and AI. To do this in the renderImGui method find the section that renders player information:
+
 ```cpp
-    
+        label = "Human Player " + std::to_string(i + 1);
+        ImGui::Text(label.c_str());
+        if (currentPlayer == i)
+        {
+            ImGui::SameLine();
+            ImGui::Text("Your Turn");
+        }
+```
+First replace this code to add a checkbox instead of a Text label. You need to pass ImGui a pointer to the bool data type in player that will be set to true and false appropriately. Run your code to check that this is working.
+
+```cpp 
+    label = "Human Player " + std::to_string(i + 1);
+    ImGui::Checkbox(label.c_str(), &players[i].isAI);
+    if (currentPlayer == i)
+    {
+        ImGui::SameLine();
+        ImGui::Text("Your Turn");
+    }
+```
+
+Next, we need to display a different Gui if the player is and AI player to if it is a human player. Here, if the player is an AI player we will add a button that will prompt the AI player to take their turn. If the button returns true then the TakeAITurn method will be called. Run the code to check this works. At the moment the log will report that AI is not yet implemented.
+
+```cpp    
     if (players[i].isAI)
     {
         label = "AI Player " + std::to_string(i + 1);
@@ -309,66 +333,41 @@ The data has been set up to enable a player to be controlled by a human or an AI
     }
 ```
 
-In the renderImGui method
-
 ### Test and commit your code to source control
 
-Test your code is working as expected, then commit your code with an appropriate commit message like "Added ability to toggle AI players to GUI"
+Once you have tested your code is working as expected, then commit your code with an appropriate commit message like "Added ability to toggle AI players to GUI"
 
 ## 5. Write a basic AI player
 
-### Know your next commit!
+Next, let's create a basic AI player. In the TakeAITurn method write code that simply searches through the rows and columns and takes the next space that is not already taken. 
 
-### Commit your code to source control with an appropriate message like ""
+### Test and commit your code to source control
+
+Once you have verified that the AI is able to take a turn as expected commit your code "Wrote a very basic AI player".
 
 ## 6. Write a minimax AI player
 
-A minimax
+A minimax algorithm is a recursive algorithm that essentially temporarily builds a tree structure on the stack as it performs a depth first search. Minimax algorithms can search for an optimal solution, or use a hueristic to make a best guess. In this case you should search until you either win or draw. You can use your CheckForWin method to check this - when you find a win or a draw assign 1 is the winner is the maximising player, and -1 is the winner is the minimising player. Assign 0 for a draw.
 
-Initially, you 
+You may find these resources useful:
 
-you will need to add
+https://en.wikipedia.org/wiki/Minimax
+
+https://www.youtube.com/watch?v=l-hh51ncgDI&t=0s
 
 https://www.youtube.com/watch?v=trKjYdBASyQ
 
-Unfortunately, writing the code for your AI player was probably more fun than writing
+https://www.geeksforgeeks.org/minimax-algorithm-in-game-theory-set-1-introduction/
 
-### Know your next commit!
+### Test and commit your code to source control
 
-### Commit your code to source control with an appropriate message like ""
+Once you have made a minimax algorithm for one AI player test your code. If your code is working commit with an appropriate message like "completed minimax algorithm for one player"
 
-## 7. Add more AI players
+## 7. Bonus Task! Add more AI players
 
-In our game you can add more players. Adapt your
+In our game you can add more players. Adapt your algorithm for multiple players. You will need to keep track of which the acitive "maximising" player is, and which players are the "minimising" opponents.
 
-```cpp
-            std::string label = "";
-            if (players[i].isAI)
-            {
-                label = "AI Player " + std::to_string(i + 1);
-                ImGui::Checkbox(label.c_str(), &players[i].isAI);
-                if (currentPlayer == i)
-                {
-                    ImGui::SameLine();
-                    if (ImGui::Button("Take Turn"))
-                    {
-                        TakeAITurn();
-                        CheckForWin();
-                        goToNextPlayer();
-                    }
-                }
-            }
-            else
-            {
-               label = "Human Player " + std::to_string(i + 1);
-               ImGui::Checkbox(label.c_str(), &players[i].isAI);
-               if (currentPlayer == i)
-               {
-                   ImGui::SameLine();
-                   ImGui::Text("Your Turn");
-               }
-            }
-```
-### Know your next commit!
+### Test and commit your code to source control
 
-### Commit your code to source control with an appropriate message like ""
+Once your AI players are able to use MiniMax code "Wrote a multiplayer minimax algorithm".
+
