@@ -9,8 +9,6 @@ http://glew.sourceforge.net/
 /*
 Dear ImGui is a bloat-free graphical user interface library for C++.
 https://github.com/ocornut/imgui
-
-For imgui examples see https://github.com/ocornut/imgui/blob/v1.74/examples/example_glfw_opengl3/main.cpp
 */
 #include "imgui/imgui.h"
 #include "imgui/imgui_impl_glfw.h"
@@ -28,9 +26,9 @@ OpenGL Mathematics (GLM) is a header only C++ mathematics library for graphics s
 OpenGL Shading Language (GLSL) specifications.
 https://github.com/g-truc/glm
 */
-#include "glm/glm.hpp";
-#include "glm/gtc/type_ptr.hpp";
-#include "glm/gtc/matrix_transform.hpp";
+#include "glm/glm.hpp"
+#include "glm/gtc/type_ptr.hpp"
+#include "glm/gtc/matrix_transform.hpp"
 
 
 #include <iostream>
@@ -38,7 +36,7 @@ https://github.com/g-truc/glm
 
 #pragma endregion includes
 
-#pragma region game logic
+#pragma region data
 
 /*
     Constant values to avoid magic numbers
@@ -62,21 +60,12 @@ static int numberOfColumns = 3;
 static int numberOfRows = 3;
 static int numberOfPlayers = 2;
 static int winCondition = 3;
+
 static int currentPlayer = 0;
 
 static int boardState[MAX_ROWS][MAX_COLUMNS];
 
-const int LOG_LENGTH = 8;
-static std::string guiLog[] = { "", "", "", "", "", "", "", "" };
 
-static void AddToLog(std::string pLogEntry)
-{
-    for (int i = 1; i < LOG_LENGTH; i++)
-    {
-        guiLog[i - 1] = guiLog[i];
-    }
-    guiLog[LOG_LENGTH - 1] = pLogEntry;
-}
 
 /*
     Player object hold information about the player, such as the player ID, colour and whether they are AI or not
@@ -107,13 +96,41 @@ static Player players[] = {
     { 4, ImVec4(1.0, 1.0, 0.0, 1.0) },
     { 5, ImVec4(1.0, 0.0, 1.0, 1.0) }, };
 
-static auto getBoardIndex(int screenWidth, int screenHeight, int xMousePosition, int yMousePosition) {
-    struct boardIndex { int column; int row; };
-    
-    return boardIndex{ (int)(numberOfColumns * xMousePosition / screenWidth), 
-    (int) (numberOfRows * (screenHeight - yMousePosition) / screenHeight) };
+#pragma endregion data
+
+#pragma region log
+
+const int LOG_LENGTH = 8;
+static std::string guiLog[] = { "", "", "", "", "", "", "", "" };
+
+static void AddToLog(std::string pLogEntry)
+{
+    for (int i = 1; i < LOG_LENGTH; i++)
+    {
+        guiLog[i - 1] = guiLog[i];
+    }
+    guiLog[LOG_LENGTH - 1] = pLogEntry;
 }
 
+static void DisplayLog()
+{
+    ImGui::Text("Game Log");
+    for (int i = 0; i < LOG_LENGTH; i++)
+    {
+        ImGui::Text(guiLog[i].c_str());
+    }
+}
+
+#pragma endregion
+
+static auto getBoardIndex(int screenWidth, int screenHeight, int xMousePosition, int yMousePosition) {
+    struct boardIndex { int column; int row; };
+
+    return boardIndex{ (int)(numberOfColumns * xMousePosition / screenWidth), 
+    (int) (numberOfRows * yMousePosition / screenHeight) };
+}
+
+#pragma region game logic
 
 static void ResetGame()
 {
@@ -124,40 +141,46 @@ static void ResetGame()
             boardState[rowIndex][columnIndex] = 0;
         }
     }
+
+    for (int logIndex = 0; logIndex < LOG_LENGTH; logIndex++)
+    {
+        guiLog[logIndex] = "";
+    }
 }
 
-static bool CheckForWin()
+static int CheckForWin()
 {
     /* This is suboptimal. 
     We should really only check around the space that has just been clicked,
     but instead we'll check every possible win on the current board!
     */
 
-    for (int rowIndex = 0; rowIndex < numberOfRows; rowIndex++)
+    // horizontal win --
+    bool isWin;
+    for (int rowIndex = 0; rowIndex < MAX_ROWS; rowIndex++)
     {
-        for (int colIndex = 0; colIndex < numberOfColumns; colIndex++)
+        for (int colIndex = 0; colIndex <= MAX_COLUMNS - winCondition; colIndex++)
         {
             if (boardState[rowIndex][colIndex] == 0)
             {
                 continue;
             }
 
-            // horizontal win --
-            for (int winConIndex = 0; winConIndex < winCondition; winConIndex++)
+            isWin = true;
+            for (int winConIndex = 0; winConIndex < winCondition - 1; winConIndex++)
             {
-
+                if(boardState[rowIndex][colIndex + winConIndex] != boardState[rowIndex][colIndex + winConIndex + 1])
+                {
+                    isWin = false;
+                    break;
+                }
             }
 
-            // vertical win |
-
-            // diagonal win /
-
-            // diagonal win \
-        
+            if (isWin) { return boardState[rowIndex][colIndex]; }
         }
     }
 
-    return false;
+    return 0;
 }
 
 static void goToNextPlayer()
@@ -187,7 +210,9 @@ static bool TakeHumanTurn(int pRowIndex, int pColumnIndex)
 
 static void TakeAITurn()
 {
-    AddToLog("AI player " + std::to_string(players[currentPlayer].ID()) + " took turn");
+    AddToLog("AI player " + std::to_string(players[currentPlayer].ID()) + " not implemented.");
+    CheckForWin();
+    goToNextPlayer();
 }
 
 #pragma endregion game logic
@@ -215,10 +240,9 @@ void mouseButtonCallback(GLFWwindow* window, int button, int action, int mods)
 
     double xPosition, yPosition;
     int windowWidth, windowHeight;
-    int closestRowIndex, closestColumnIndex;
     glfwGetWindowSize(window, &windowWidth, &windowHeight);
     glfwGetCursorPos(window, &xPosition, &yPosition);
-    auto result = getBoardIndex(windowWidth, windowHeight, xPosition, yPosition);
+    auto result = getBoardIndex(windowWidth, windowHeight, (int)xPosition, (int)yPosition);
 
     if (boardState[result.row][result.column] != 0)
     {
@@ -227,8 +251,16 @@ void mouseButtonCallback(GLFWwindow* window, int button, int action, int mods)
 
     boardState[result.row][result.column] = players[currentPlayer].ID();
 
-    CheckForWin();
-    goToNextPlayer();
+    int winner = CheckForWin();
+
+    if (winner == 0)
+    {
+        goToNextPlayer();
+    }
+    else
+    {
+        AddToLog("Player " + std::to_string(winner) + " Wins!");
+    }
 }
 
 GLFWwindow* setupWindow()
@@ -277,9 +309,73 @@ void cleanUp(GLFWwindow * window)
     glfwTerminate();
 }
 
+void renderImGui()
+{
+    ImGui_ImplOpenGL3_NewFrame();
+    ImGui_ImplGlfw_NewFrame();
+    ImGui::NewFrame();
+
+    ImGui::Begin("Hello, IMGUI!");
+
+    ImGuiStyle& style = ImGui::GetStyle();
+    style.Colors[ImGuiCol_FrameBg] = ImVec4(0.16f, 0.29f, 0.48f, 0.54f);
+
+    DisplayLog();
+
+    if (ImGui::SliderInt("Players", &numberOfPlayers, MIN_PLAYERS, MAX_PLAYERS))
+    {
+        ResetGame();
+    }
+
+    ImGui::Text("AI or Human Players");
+    for (int i = 0; i < numberOfPlayers; i++)
+    {
+        style.Colors[ImGuiCol_FrameBg].x = players[i].Colour()[0];
+        style.Colors[ImGuiCol_FrameBg].y = players[i].Colour()[1];
+        style.Colors[ImGuiCol_FrameBg].z = players[i].Colour()[2];
+        style.Colors[ImGuiCol_FrameBg].w = players[i].Colour()[3];
+        std::string label = "";
+        
+        label = "Human Player " + std::to_string(i + 1);
+        ImGui::Text(label.c_str());
+        if (currentPlayer == i)
+        {
+            ImGui::SameLine();
+            ImGui::Text("Your Turn");
+        }
+
+    }
+
+    style.Colors[ImGuiCol_FrameBg] = ImVec4(0.16f, 0.29f, 0.48f, 0.54f);
+    if (ImGui::SliderInt("Columns", &numberOfColumns, MIN_COLUMNS, MAX_COLUMNS))
+    {
+        ResetGame();
+    }
+
+    if (ImGui::SliderInt("Rows", &numberOfRows, MIN_ROWS, MAX_ROWS))
+    {
+        ResetGame();
+    }
+
+    if (ImGui::SliderInt("Win Condition", &winCondition, MIN_WIN_CONDITION, MAX_WIN_CONDITION))
+    {
+        ResetGame();
+    }
+
+    if (ImGui::Button("Reset Game"))
+    {
+        ResetGame();
+    }
+
+    ImGui::End();
+
+    ImGui::Render();
+    ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+}
+
 #pragma endregion window setup
 
-#pragma openGL code
+#pragma region openGL code
 
 
 static GLuint setupOpenGL()
@@ -344,6 +440,75 @@ static GLuint setupOpenGL()
     return shaderProgramID;
 }
 
+static void renderOpenGL(GLFWwindow* window, int shaderProgramID)
+{
+    int display_w, display_h;
+    glfwGetFramebufferSize(window, &display_w, &display_h);
+    glViewport(0, 0, display_w, display_h);
+    /* Render here */
+    glClear(GL_COLOR_BUFFER_BIT);
+
+    GLint colourLocation = glGetUniformLocation(shaderProgramID, "uColour");
+    GLint translationLocation = glGetUniformLocation(shaderProgramID, "uTranslation");
+    GLint projectionLocation = glGetUniformLocation(shaderProgramID, "uProjection");
+
+    glm::vec2 currentTranslation(0.6f, 1.2f * numberOfRows - 0.6f);
+    glm::vec2 xTranslation(1.2f, 0.0f);
+    glm::vec2 yTranslation(0.0f, -1.2f);
+    glm::vec2 xReset(-1.2f * numberOfColumns, 0.f);
+
+    glm::mat4 projection = glm::ortho(0.0f, 1.2f * numberOfColumns, 0.0f, 1.2f * numberOfRows, -1.f, 1.f);
+
+    glUniformMatrix4fv(projectionLocation, 1, GL_FALSE, glm::value_ptr(projection));
+
+    float black[4] = { 0.f, 0.f, 0.f, 1.f };
+
+    double xPosition, yPosition;
+    int windowWidth, windowHeight;
+    int closestRowIndex, closestColumnIndex;
+    glfwGetWindowSize(window, &windowWidth, &windowHeight);
+    glfwGetCursorPos(window, &xPosition, &yPosition);
+    auto result = getBoardIndex(windowWidth, windowHeight, (int)xPosition, (int)yPosition);
+
+    closestRowIndex = result.row;
+    closestColumnIndex = result.column;
+
+    for (int rowIndex = 0; rowIndex < numberOfRows; rowIndex++)
+    {
+        for (int columnIndex = 0; columnIndex < numberOfColumns; columnIndex++)
+        {
+            if (boardState[rowIndex][columnIndex] == 0)
+            {
+                if (!(rowIndex == closestRowIndex && columnIndex == closestColumnIndex))
+                {
+                    glUniform4fv(colourLocation, 1, black);
+                }
+                else
+                {
+                    glUniform4fv(colourLocation, 1, players[currentPlayer].Colour());
+                }
+            }
+            else
+            {
+                int playerIndex = 0;
+                for (; playerIndex < numberOfPlayers; playerIndex++)
+                {
+                    if (boardState[rowIndex][columnIndex] == players[playerIndex].ID())
+                    {
+                        break;
+                    }
+                }
+                glUniform4fv(colourLocation, 1, players[playerIndex].Colour());
+            }
+            glUniform2fv(translationLocation, 1, glm::value_ptr(currentTranslation));
+            glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+            currentTranslation += xTranslation;
+        }
+        currentTranslation += xReset;
+        currentTranslation += yTranslation;
+    }
+}
+
 #pragma endregion openGL code
 
 int main(void)
@@ -358,165 +523,20 @@ int main(void)
     int shaderProgramID = setupOpenGL();
 
     ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
+    glClearColor(clear_color.x, clear_color.y, clear_color.z, clear_color.w);
 
     /* Loop until the user closes the window */
     while (!glfwWindowShouldClose(window))
     {
-        ImGui_ImplOpenGL3_NewFrame();
-        ImGui_ImplGlfw_NewFrame();
-        ImGui::NewFrame();
+        /* Poll for and process events */
+        glfwPollEvents();
 
-        ImGui::Begin("Hello, IMGUI!");                          // Create a window called "Hello, world!" and append into it.
-        
-        ImGuiStyle& style = ImGui::GetStyle();
-        style.Colors[ImGuiCol_FrameBg] = ImVec4(0.16f, 0.29f, 0.48f, 0.54f);
+        renderOpenGL(window, shaderProgramID);
 
-        ImGui::Text("Game Log");
-        for (int i = 0; i < LOG_LENGTH; i++)
-        {
-            ImGui::Text(guiLog[i].c_str());
-        }
-
-        if (ImGui::SliderInt("Players", &numberOfPlayers, MIN_PLAYERS, MAX_PLAYERS))
-        {
-            ResetGame();
-        }
-        ImGui::Text("AI or Human Players");
-        for (int i = 0; i < numberOfPlayers; i++)
-        {
-            style.Colors[ImGuiCol_FrameBg].x = players[i].Colour()[0];
-            style.Colors[ImGuiCol_FrameBg].y = players[i].Colour()[1];
-            style.Colors[ImGuiCol_FrameBg].z = players[i].Colour()[2];
-            style.Colors[ImGuiCol_FrameBg].w = players[i].Colour()[3];
-
-            std::string label = "";
-            if (players[i].isAI)
-            {
-                label = "AI Player " + std::to_string(i + 1);
-                ImGui::Checkbox(label.c_str(), &players[i].isAI);
-                if (currentPlayer == i)
-                {
-                    ImGui::SameLine();
-                    if (ImGui::Button("Take Turn"))
-                    {
-                        TakeAITurn();
-                        CheckForWin();
-                        goToNextPlayer();
-                    }
-                }
-            }
-            else
-            {
-               label = "Human Player " + std::to_string(i + 1);
-               ImGui::Checkbox(label.c_str(), &players[i].isAI);
-               if (currentPlayer == i)
-               {
-                   ImGui::SameLine();
-                   ImGui::Text("Your Turn");
-               }
-            }
-
-        }
-
-        style.Colors[ImGuiCol_FrameBg] = ImVec4(0.16f, 0.29f, 0.48f, 0.54f);
-        if(ImGui::SliderInt("Columns", &numberOfColumns, MIN_COLUMNS, MAX_COLUMNS))
-        {
-            ResetGame();
-        }
-
-        if (ImGui::SliderInt("Rows", &numberOfRows, MIN_ROWS, MAX_ROWS))
-        {
-            ResetGame();
-        }
-
-        if (ImGui::SliderInt("Win Condition", &winCondition, MIN_WIN_CONDITION, MAX_WIN_CONDITION))
-        {
-            ResetGame();
-        }
-
-        if (ImGui::Button("Reset Game"))
-        {
-            ResetGame();
-        }
-
-        ImGui::End();
-
-        /* Render here */
-        glClear(GL_COLOR_BUFFER_BIT);
-        
-        GLint colourLocation = glGetUniformLocation(shaderProgramID, "uColour");
-        GLint translationLocation = glGetUniformLocation(shaderProgramID, "uTranslation");
-        GLint projectionLocation = glGetUniformLocation(shaderProgramID, "uProjection");
-
-        glm::vec2 currentTranslation(0.6f, 0.6f);
-        glm::vec2 xTranslation(1.2f, 0.0f);
-        glm::vec2 yTranslation(0.0f, 1.2f);
-        glm::vec2 xReset(-1.2f * numberOfColumns, 0.f);
-
-        glm::mat4 projection = glm::ortho(0.0f, 1.2f * numberOfColumns, 0.0f, 1.2f * numberOfRows, -1.f, 1.f);
-
-        glUniformMatrix4fv(projectionLocation, 1, GL_FALSE, glm::value_ptr(projection));
-
-        float black[4] = { 0.f, 0.f, 0.f, 1.f };
-
-        double xPosition, yPosition;
-        int windowWidth, windowHeight;
-        int closestRowIndex, closestColumnIndex;
-        glfwGetWindowSize(window, &windowWidth, &windowHeight);
-        glfwGetCursorPos(window, &xPosition, &yPosition);
-        auto result = getBoardIndex(windowWidth, windowHeight, xPosition, yPosition);
-
-        closestRowIndex = result.row;
-        closestColumnIndex = result.column;
-
-        for (int rowIndex = 0; rowIndex < numberOfRows; rowIndex++)
-        {
-            for (int columnIndex = 0; columnIndex < numberOfColumns; columnIndex++)
-            {
-                if (boardState[rowIndex][columnIndex] == 0)
-                {
-                    if (!(rowIndex == closestRowIndex && columnIndex == closestColumnIndex))
-                    {
-                        glUniform4fv(colourLocation, 1, black);
-                    }
-                    else
-                    {
-                        glUniform4fv(colourLocation, 1, players[currentPlayer].Colour());
-                    }
-                }
-                else
-                {
-                    int playerIndex = 0;
-                    for (; playerIndex < numberOfPlayers; playerIndex++)
-                    {
-                        if (boardState[rowIndex][columnIndex] == players[playerIndex].ID())
-                        {
-                            break;
-                        }
-                    }
-                    glUniform4fv(colourLocation, 1, players[playerIndex].Colour());
-                }
-                glUniform2fv(translationLocation, 1, glm::value_ptr(currentTranslation));
-                glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
-                currentTranslation += xTranslation;
-            }
-            currentTranslation += xReset;
-            currentTranslation += yTranslation;
-        }
-
-        ImGui::Render();
-        int display_w, display_h;
-        glfwGetFramebufferSize(window, &display_w, &display_h);
-        glViewport(0, 0, display_w, display_h);
-        glClearColor(clear_color.x, clear_color.y, clear_color.z, clear_color.w);
-        
-        ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+        renderImGui();
 
         /* Swap front and back buffers */
         glfwSwapBuffers(window);
-
-        /* Poll for and process events */
-        glfwPollEvents();
     }
 
     cleanUp(window);
