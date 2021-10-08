@@ -19,6 +19,8 @@ A lot of the functionality for TicTacToe is already provided. To begin with chec
 
 ## 1. Explore the existing functionality
 
+Run the code, explore the interface and play the game. You can do this in groups if you like. It is important to try to build a community amongst students on the module!
+
 ## 2. Look at the data
 
 An important part of programming is understanding what information is important and how it is stored. In the code there is a region called data. The first part of this code includes a section of constants. They are appropriately named, and so are hopefully self explanatory. Mostly they set limits for other variables.
@@ -43,8 +45,6 @@ const int MAX_WIN_CONDITION = 5;
 Next there are some static variables. These are effectively global variables that can be accessed from anywhere. This is generally not good practice. They have appropriate variable names and so should be self-explanatory. They allow us to change various things about the game, such as the number of columns, or the number of tiles in a row required to win, or the index of the current player.
 
 The board state itself is represented as two dimensional array of integers. In this array a value of 0 means a space is currently unoccupied. Otherwise the ID of the specific player is used (more on the player later).
-
-There is also a log made up of strings that is displayed in the Gui to give feedback.
 
 ```cpp
 
@@ -118,7 +118,7 @@ static void DisplayLog()
 ```
 
 
-## 3. Fix the win condition
+## 3. Fix the win conditions
 
 When playing the game you might have noticed that sometimes a player does not win when they should.
 
@@ -194,11 +194,129 @@ If isWin is still true a win is found, and so the method returns the correspondi
 
 Currently it does this by iterating over the 
 
-## 4. Add UI for more players
+Test your code.
 
+### Know your next commit!
 
+Remaining focused and making regular commits to source control is a habit that is difficult to build. In order to try and cultivate that we will promote an approach of knowing what your next commit will be. In this case, it will be to add a vertical win condition. To do this, in the CheckForWin method, after we check for horizontal wins, but before we return 0 add a loop that will loop through all of the columns.
+
+```cpp
+    for (int colIndex = 0; colIndex < MAX_COLUMNS; colIndex++)
+    {
+        // more code to be added here
+    }
+```
+
+Inside that loop add a second loop, that will 
+
+```cpp
+
+    for (int rowIndex = 0; rowIndex <= MAX_ROWS - winCondition; rowIndex++)
+    {
+        // more code to be added here
+    }
+
+```
+
+```cpp
+    if (boardState[rowIndex][colIndex] == 0)
+    {
+        continue;
+    }
+
+    isWin = true;
+    for (int winConIndex = 0; winConIndex < winCondition - 1; winConIndex++)
+    {
+        if (boardState[rowIndex + winConIndex][colIndex] != boardState[rowIndex + winConIndex + 1][colIndex])
+        {
+            isWin = false;
+            break;
+        }
+    }
+
+    if (isWin) { return boardState[rowIndex][colIndex]; }
+```
+
+```cpp
+    isWin = true;
+    for (int winConIndex = 0; winConIndex < winCondition - 1; winConIndex++)
+    {
+        if (boardState[rowIndex + winConIndex][colIndex] != boardState[rowIndex + winConIndex + 1][colIndex])
+        {
+            isWin = false;
+            break;
+        }
+    }
+
+    if (isWin) { return boardState[rowIndex][colIndex]; }
+```
+
+### Test and commit your code to source control
+
+Test your code is working as expected, then commit your code with an appropriate commit message like "Added vertical win condition"
+
+### Know your next commit!
+
+The next piece of functionality we need to add is the diagonal win condition going from the top left to the bottom right.
+
+Modify the logic you have already 
+
+### Commit your code to source control with an appropriate message like "Added diagonal \ win condition"
+
+### Know your next commit!
+
+The final 
+
+### Commit your code to source control with an appropriate message like "Added diagonal / win condition"
+
+### Know your next commit!
+
+Add a drawing condition. You can do this by checking to see if there are any unoccupied spaces remaining.
+
+### Test and commit your code to source control
+
+## 4. Add AI players
+
+The data has been set up to enable a player to be controlled by a human or an AI. The next task is to toggle between the two.
+
+### Know your next commit!
+
+```cpp
+    
+    if (players[i].isAI)
+    {
+        label = "AI Player " + std::to_string(i + 1);
+        ImGui::Checkbox(label.c_str(), &players[i].isAI);
+        if (currentPlayer == i)
+        {
+            ImGui::SameLine();
+            if (ImGui::Button("Take Turn"))
+            {
+                TakeAITurn();
+            }
+        }
+    }
+    else
+    {
+        label = "Human Player " + std::to_string(i + 1);
+        ImGui::Checkbox(label.c_str(), &players[i].isAI);
+        if (currentPlayer == i)
+        {
+            ImGui::SameLine();
+            ImGui::Text("Your Turn");
+        }
+    }
+```
+
+In the renderImGui method
+
+### Commit your code to source control with an appropriate message like ""
 
 ## 5. Write a basic AI player
+
+### Know your next commit!
+
+### Commit your code to source control with an appropriate message like ""
 
 ## 6. Write a minimax AI player
 
@@ -211,6 +329,10 @@ you will need to add
 https://www.youtube.com/watch?v=trKjYdBASyQ
 
 Unfortunately, writing the code for your AI player was probably more fun than writing
+
+### Know your next commit!
+
+### Commit your code to source control with an appropriate message like ""
 
 ## 7. Add more AI players
 
@@ -244,3 +366,6 @@ In our game you can add more players. Adapt your
                }
             }
 ```
+### Know your next commit!
+
+### Commit your code to source control with an appropriate message like ""
